@@ -1,46 +1,77 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
-		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+	  store: {
+		contacts: []
+	  },
+	  actions: {
+		contactFetch: () => {
+		  fetch("https://playground.4geeks.com/contact/agendas/gabrielContact/contacts")
+			.then(res => res.json())
+			.then(data => {
+			  setStore({ contacts: data });
+			})
+			.catch(error => {
+			  console.error("Error fetching contacts:", error);
+			});
 		},
-		actions: {
-			
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
+		contactCreate: newContact => {
+		  return fetch("https://playground.4geeks.com/contact/agendas/gabrielContact/contacts", {
+			method: "POST",
+			headers: {
+			  "Content-Type": "application/json"
 			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
-
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
+			body: JSON.stringify(newContact)
+		  })
+		  .then(res => res.json())
+		  .then(data => {
+			let currentContacts = getStore().contacts;
+			if (!Array.isArray(currentContacts)) {
+			  currentContacts = [];
 			}
+			setStore({ contacts: [...currentContacts, data] });
+		  })
+		  .catch(error => {
+			console.error("Error creating contact:", error);
+			throw error;
+		  });
+		},
+		contactUpdate: (id, updatedContact) => {
+		  return fetch(`https://playground.4geeks.com/contact/agendas/gabrielContact/contacts/${id}/`, {
+			method: "PUT",
+			headers: {
+			  "Content-Type": "application/json"
+			},
+			body: JSON.stringify(updatedContact)
+		  })
+		  .then(res => res.json())
+		  .then(data => {
+			const updatedContacts = getStore().contacts.map(contact =>
+			  contact.id === parseInt(id) ? data : contact
+			);
+			setStore({ contacts: updatedContacts });
+		  })
+		  .catch(error => {
+			console.error("Error updating contact:", error);
+			throw error;
+		  });
+		},
+		contactDelete: id => {
+		  return fetch(`https://playground.4geeks.com/contact/agendas/gabrielContact/contacts/${id}/`, {
+			method: "DELETE"
+		  })
+		  .then(() => {
+			const updatedContacts = getStore().contacts.filter(
+			  contact => contact.id !== parseInt(id)
+			);
+			setStore({ contacts: updatedContacts });
+		  })
+		  .catch(error => {
+			console.error("Error deleting contact:", error);
+			throw error;
+		  });
 		}
+	  }
 	};
-};
-
-export default getState;
+  };
+  
+  export default getState;

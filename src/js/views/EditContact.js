@@ -1,38 +1,46 @@
-import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Context } from "../store/appContext";
 
-export const Demo = () => {
-  const { actions } = useContext(Context);
+export const EditContact = () => {
+  const { actions, store } = useContext(Context);
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [newContact, setNewContact] = useState({
+  const [contact, setContact] = useState({
     name: "",
     address: "",
     phone: "",
     email: ""
   });
 
+  useEffect(() => {
+    const existingContact = store.contacts.find(c => c.id === parseInt(id));
+    if (existingContact) {
+      setContact(existingContact);
+    }
+  }, [id, store.contacts]);
+
   const handleInputChange = e => {
-    setNewContact({
-      ...newContact,
-      [e.target.id]: e.target.value
+    setContact({
+      ...contact,
+      [e.target.name]: e.target.value
     });
   };
 
   const handleSubmit = e => {
     e.preventDefault();
-    actions.contactCreate(newContact)
+    actions.contactUpdate(id, contact)
       .then(() => {
         navigate("/");
       })
       .catch(error => {
-        console.error("Error creating contact:", error);
+        console.error("Error updating contact:", error);
       });
   };
 
   return (
     <div className="container">
-      <h1>Add new contact</h1>
+      <h1>Edit Contact</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="name" className="form-label">
@@ -42,8 +50,8 @@ export const Demo = () => {
             type="text"
             className="form-control"
             id="name"
-            placeholder="Name"
-            value={newContact.name}
+            name="name"
+            value={contact.name}
             onChange={handleInputChange}
             required
           />
@@ -56,8 +64,8 @@ export const Demo = () => {
             type="text"
             className="form-control"
             id="address"
-            placeholder="Address"
-            value={newContact.address}
+            name="address"
+            value={contact.address}
             onChange={handleInputChange}
           />
         </div>
@@ -69,8 +77,8 @@ export const Demo = () => {
             type="text"
             className="form-control"
             id="phone"
-            placeholder="Phone"
-            value={newContact.phone}
+            name="phone"
+            value={contact.phone}
             onChange={handleInputChange}
           />
         </div>
@@ -82,18 +90,16 @@ export const Demo = () => {
             type="text"
             className="form-control"
             id="email"
-            placeholder="Email"
-            value={newContact.email}
+            name="email"
+            value={contact.email}
             onChange={handleInputChange}
           />
         </div>
-        <div className="mb-3">
-          <button type="submit" className="btn btn-primary">
-            Submit
-          </button>
-        </div>
-        <Link to="/">
-          <span>Back home</span>
+        <button type="submit" className="btn btn-primary">
+          Save Changes
+        </button>
+        <Link to="/" className="btn btn-secondary ml-2">
+          Cancel
         </Link>
       </form>
     </div>
